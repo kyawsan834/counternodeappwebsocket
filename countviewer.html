@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Visitor Counter</title>
+</head>
+<body>
+    <h1>Real-Time Visitor Counter</h1>
+    <p>Current visitors: <span id="visitor-count">0</span></p>
+
+    <script>
+        // Client-side JavaScript to connect to the WebSocket server
+        const socket = new WebSocket("ws://localhost:3000");
+
+        socket.onmessage = (event) => {
+            const visitorCount = parseInt(event.data);
+            document.getElementById("visitor-count").textContent = visitorCount;
+        };
+    </script>
+
+    <script>
+        // Server-side JavaScript (Node.js) to create a WebSocket server
+        const WebSocket = require("ws");
+        const http = require("http");
+
+        const server = http.createServer((req, res) => {
+            res.writeHead(200, { "Content-Type": "text/plain" });
+            res.end("WebSocket server running");
+        });
+
+        const wss = new WebSocket.Server({ server });
+
+        let visitorCount = 0;
+
+        wss.on("connection", (ws) => {
+            visitorCount++;
+            ws.send(visitorCount.toString());
+
+            ws.on("close", () => {
+                visitorCount--;
+                wss.clients.forEach((client) => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(visitorCount.toString());
+                    }
+                });
+            });
+        });
+
+        server.listen(3000, () => {
+            console.log("WebSocket server is running on port 3000");
+        });
+    </script>
+</body>
+</html>
