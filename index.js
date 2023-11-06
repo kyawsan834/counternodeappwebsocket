@@ -1,10 +1,20 @@
-const WebSocket = require("ws");
+const express = require("express");
 const http = require("http");
-const server = http.createServer((req, res) => {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("WebSocket server running");
+const WebSocket = require("ws");
+
+const app = express();
+const server = http.createServer(app);
+const port = process.env.PORT || 3000;
+
+// Serve static files (e.g., stylesheets, images, scripts) from the "public" directory
+app.use(express.static("public"));
+
+// Define a route to serve your HTML page
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + "/public/index.html");
 });
 
+// WebSocket server
 const wss = new WebSocket.Server({ server });
 
 let visitorCount = 0;
@@ -23,6 +33,6 @@ wss.on("connection", (ws) => {
     });
 });
 
-server.listen(3000, () => {
-    console.log("WebSocket server is running on port 3000");
+server.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
